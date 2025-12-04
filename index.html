@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Connection Crisis: How Lost Social Time Made Americans Unhappy</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #e5e7eb;
+            background: #0f172a;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #be70bf 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            font-style: italic;
+            opacity: 0.95;
+        }
+
+        .header .byline {
+            margin-top: 30px;
+            font-size: 0.9em;
+            opacity: 0.85;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .intro {
+            font-size: 1.2em;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            color: #cbd5e1;
+        }
+
+        .section {
+            margin: 60px 0;
+        }
+
+        .section h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #a78bfa;
+            font-weight: 600;
+        }
+
+        .section p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            line-height: 1.8;
+            color: #cbd5e1;
+        }
+
+        #viz1, #viz2, #viz3 {
+            margin: 40px 0;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid #475569;
+        }
+
+        .viz-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #f1f5f9;
+        }
+
+        .viz-subtitle {
+            font-size: 1.1em;
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 500px;
+            background: #1e293b;
+            border-radius: 8px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #a78bfa;
+        }
+
+        .filter-group select {
+            padding: 10px 15px;
+            border: 2px solid #475569;
+            border-radius: 6px;
+            font-size: 0.95em;
+            background: #1e293b;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e5e7eb;
+        }
+
+        .filter-group select:hover {
+            border-color: #8b5cf6;
+            background: #334155;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+
+        .filter-info {
+            text-align: center;
+            font-size: 0.9em;
+            color: #94a3b8;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        .line-friends {
+            fill: none;
+            stroke: #22d3ee;
+            stroke-width: 3.5;
+            stroke-linecap: round;
+        }
+
+        .line-happiness {
+            fill: none;
+            stroke: #f472b6;
+            stroke-width: 3.5;
+            stroke-linecap: round;
+        }
+
+        .dot-friends {
+            fill: #22d3ee;
+            stroke: #0f172a;
+            stroke-width: 2.5;
+            cursor: pointer;
+            filter: drop-shadow(0 2px 4px rgba(34, 211, 238, 0.4));
+        }
+
+        .dot-happiness {
+            fill: #f472b6;
+            stroke: #0f172a;
+            stroke-width: 2.5;
+            cursor: pointer;
+            filter: drop-shadow(0 2px 4px rgba(244, 114, 182, 0.4));
+        }
+
+        .axis-label {
+            font-size: 13px;
+            fill: #94a3b8;
+            font-weight: 500;
+        }
+
+        .axis-friends {
+            fill: #22d3ee;
+        }
+
+        .axis-happiness {
+            fill: #f472b6;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 12px 16px;
+            background: rgba(30, 41, 59, 0.98);
+            color: white;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 0.9em;
+            max-width: 220px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid #475569;
+            z-index: 1000;
+        }
+
+        .note {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+            border-left: 4px solid #60a5fa;
+            padding: 16px 20px;
+            margin: 30px 0;
+            font-size: 0.95em;
+            border-radius: 4px;
+            color: #e0e7ff;
+        }
+
+        .note strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #93c5fd;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95em;
+            color: #cbd5e1;
+        }
+
+        .legend-line {
+            width: 40px;
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .heatmap-cell {
+            stroke: #1e293b;
+            stroke-width: 2;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .heatmap-cell:hover {
+            opacity: 0.8;
+            stroke: #8b5cf6;
+            stroke-width: 3;
+        }
+
+        .area {
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+
+        .area:hover {
+            opacity: 1;
+        }
+
+        .area.dimmed {
+            opacity: 0.2;
+        }
+
+        .area.highlighted {
+            opacity: 1;
+        }
+
+        .area-friends {
+            fill: #6366f1;
+        }
+
+        .area-family {
+            fill: #10b981;
+        }
+
+        .area-alone {
+            fill: #f59e0b;
+        }
+
+        .area-nonsocializing {
+            fill: #ef4444;
+        }
+
+        .annotation-line {
+            stroke: #64748b;
+            stroke-width: 2;
+            stroke-dasharray: 6, 4;
+        }
+
+        .annotation-text {
+            font-size: 12px;
+            fill: #94a3b8;
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        .annotation-label {
+            font-size: 11px;
+            fill: #fff;
+            font-weight: 600;
+            text-anchor: middle;
+        }
+
+        .annotation-bg {
+            fill: #8b5cf6;
+            rx: 4;
+        }
+
+        .key-insight {
+            fill: #f472b6;
+            font-size: 14px;
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .category-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .category-button {
+            padding: 10px 20px;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            background: #1e293b;
+            color: #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .category-button:hover {
+            border-color: #8b5cf6;
+            background: #334155;
+        }
+
+        .category-button.active {
+            border-color: #8b5cf6;
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .comparison-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 20px;
+            background: #1e293b;
+            border-radius: 8px;
+        }
+
+        .comparison-item {
+            text-align: center;
+        }
+
+        .comparison-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .comparison-label {
+            font-size: 0.9em;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            .chart-container {
+                height: 400px;
+            }
+            .filters {
+                flex-direction: column;
+            }
+            .comparison-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>The Connection Crisis</h1>
+        <div class="subtitle">How Lost Social Time Made Americans Unhappy</div>
+        <div class="byline">Winnie Chen | CS 448B Fall 2025</div>
+    </div>
+
+    <div class="container">
+        <div class="intro">
+            A quiet pandemic that spread across the nation over two decades. No illness, no fatalities, no visible pain...but the majority of Americans have experienced it at some point or another in their lives: loneliness. How did we get here, and what effects does it have on our happiness?
+        </div>
+
+        <div class="section">
+            <h2>The Vanishing Social Hour</h2>
+            <p>
+                Over the past 20 years, Americans have become more and more isolated, spending less and less time with others. The blue line shows average time spent with friends. These times include a coffee with a friend, an evening out, even running an errand accompanied by a friend. Those small moments of connection had big impacts on our happiness, which is not surprising considering the numerous psychological studies that support the correlation between social connection and well-being (Abrams). As the years went by, slowly at first, we began pulling away. The decline accelerates around 2013; then the pandemic arrives in 2020, and the collapse becomes dramatic.
+            </p>
+            
+
+            <div id="viz1">
+                <div class="viz-title">Time with Friends vs Unhappiness (2003-2024)</div>
+                
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Age Group</label>
+                        <select id="age-filter">
+                            <option value="all">All Ages</option>
+                            <option value="18-34">18-34 (Young Adults)</option>
+                            <option value="35-54">35-54 (Middle Age)</option>
+                            <option value="55+">55+ (Older Adults)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Gender</label>
+                        <select id="sex-filter">
+                            <option value="all">All</option>
+                            <option value="1">Male</option>
+                            <option value="2">Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filter-info" id="filter-info">Showing: All Ages, All Genders</div>
+
+                <div class="chart-container" id="chart1"></div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-line" style="background: #22d3ee;"></div>
+                        <span>Time with Friends (minutes/day)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-line" style="background: #f472b6;"></div>
+                        <span>% Not Too Happy</span>
+                    </div>
+                </div>
+            </div>
+
+            <p>
+                The red line shows the percentage of Americans reporting they're "not too happy." As time with friends falls, unhappiness rises. The mirror image is impossible to ignore; decline in happiness and social isolation are two sides of the same crisis. Different demographics are affected slighlty differently but not significantly; everyone became lonelier across age and gender. 
+            </p>
+        </div>
+
+    <div class="section">
+        <h2>The Daily Trade-Off: Screens and Work vs Connection</h2>
+        <p>
+            What replaced those hours we used to spend with friends and family? The answer lies in what we call "non-socializing time": hours spent on games, computers, TV, work, and education. At the individual level, we can see a measurable pattern: as people spend more time in these solitary or screen-based activities, their social time diminishes.
+        </p>
+        
+        <p>
+            <strong>Interaction:</strong> Click on each screen usage group below to see how their social lives differ. Notice how heavy screen users average nearly an hour less social time per day than light users. That's 365 hours, or 15 full days, of lost connection per year.
+        </p>
+
+        <div id="viz2">
+            <div class="viz-title">Screen Time vs Social Connection</div>
+            <div class="viz-subtitle">Click on screen usage groups to compare their social lives</div>
+            <div class="chart-container" id="chart2"></div>
+        </div>
+
+        <p>
+            The pattern is unmistakable: Americans who limit screen time maintain richer social lives. Each bubble represents thousands of people with similar daily patterns, and the downward trend line reveals the trade-off. When we choose screens, we often choose isolation.
+        </p>
+    </div>
+
+        <div class="section">
+            <h2>The Great Reallocation: Click to Compare</h2>
+            <p>
+                Now let's step back and look at the big picture. Over two decades, Americans have fundamentally restructured how we spend our days, resulting in this social time crisis. The stacked area chart below shows the complete story: the rise of solitary, screen-based activities/work or alone time in general and the simultaneous decline of time with friends and family.
+            </p>
+            
+            <p>
+                <strong>Interaction:</strong> Click on each category in the legend below to isolate it and see its trend over time. Click "All Categories" to see the full picture. Notice how social time (friends and family) shrinks while solitary activities expand.
+            </p>
+
+            <div id="viz3">
+                <div class="viz-title">The Reallocation of American Time (2003-2024)</div>
+                
+                <div class="category-selector">
+                    <button class="category-button active" data-category="all">All Categories</button>
+                    <button class="category-button" data-category="friends">Time with Friends</button>
+                    <button class="category-button" data-category="family">Time with Family</button>
+                    <button class="category-button" data-category="alone">Time Alone</button>
+                    <button class="category-button" data-category="nonsocializing">Screens/Work</button>
+                </div>
+
+                <div class="chart-container" id="chart3"></div>
+                
+                <div class="comparison-panel" id="comparison-panel">
+                    <div class="comparison-item">
+                        <div class="comparison-label">2003</div>
+                        <div class="comparison-value" id="value-2003">--</div>
+                        <div class="comparison-label">min/day</div>
+                    </div>
+                    <div class="comparison-item">
+                        <div class="comparison-label">2024</div>
+                        <div class="comparison-value" id="value-2024">--</div>
+                        <div class="comparison-label">min/day</div>
+                    </div>
+                </div>
+            </div>
+
+            <p>
+                Notice that in 2020, the COVID-19 pandemic pushed us further into digital isolation. Most striking is what happened after this: we never bounced back. The "new normal" is thus a lonelier normal.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>A Reversal Is Possible</h2>
+            <p>
+                We've restructured our lives around work and screens, and happiness has paid the price. But the research is clear: social connection is not a luxury but something as essential to our health as not smoking, exercising regularly, or eating well. The choice is ours, minute by minute, day by day. Are we ready to reallocate our time back toward what truly makes us human?
+            </p>
+        </div>
+
+        <div class="note">
+            <strong>Sources:</strong>
+            Social time data from American Time Use Survey (ATUS) with demographic information, 2003-2024. 
+            Happiness data from NORC General Social Survey (GSS), 1972-2024.
+        </div>
+    </div>
+
+    <div class="tooltip"></div>
+
+    <script>
+        let atusData, atusData2, happinessData;
+
+        Promise.all([
+            d3.csv('atus_data.csv'),
+            d3.csv('atus_data2.csv'),
+            d3.json('GSS.json')
+        ]).then(([atus1, atus2, gss]) => {
+            
+            atusData = atus1.map(d => ({
+                YEAR: +d.YEAR,
+                AGE: +d.AGE,
+                SEX: +d.SEX,
+                all_friends: +d.all_friends,
+                alone: +d.alone,
+                family: +d.family
+            }));
+
+            atusData2 = atus2.map(d => ({
+                YEAR: +d.YEAR,
+                alone2: +d.alone2,
+                family2: +d.family2,
+                friends: +d.friends,
+                nonsocializing: +d.nonsocializing
+            }));
+
+            const validHappiness = gss.data.filter(d => 
+                d.happy && 
+                !d.happy.includes('.') &&
+                d.happy.trim() !== ''
+            );
+
+            const byYear = d3.rollup(
+                validHappiness,
+                v => {
+                    const total = v.length;
+                    const notTooHappy = v.filter(d => d.happy === "Not too happy").length;
+                    return (notTooHappy / total) * 100;
+                },
+                d => parseInt(d.year)
+            );
+
+            happinessData = gss.data
+                .filter(d => 
+                    d.happy && 
+                    !d.happy.includes('.') &&
+                    d.happy.trim() !== '' &&
+                    d.year && 
+                    parseInt(d.year) >= 2003 && 
+                    parseInt(d.year) <= 2024
+                )
+                .map(d => ({
+                    year: parseInt(d.year),
+                    age: parseInt(d.age),
+                    sex: d.sex === "MALE" ? 1 : d.sex === "FEMALE" ? 2 : null, 
+                    happy: d.happy
+                }))
+                .filter(d => !isNaN(d.year) && !isNaN(d.age) && d.sex !== null);
+
+
+            updateViz1();
+            drawNonsocializingCorrelation(atusData2);
+            drawInteractiveStackedArea();
+
+            d3.select('#age-filter').on('change', updateViz1);
+            d3.select('#sex-filter').on('change', updateViz1);
+
+        }).catch(error => {
+            console.error('Error loading data:', error);
+            d3.select('.container').append('div')
+                .style('color', '#ef4444')
+                .style('padding', '40px')
+                .style('text-align', 'center')
+                .style('font-size', '1.2em')
+                .html('Error loading data files. Please ensure atus_data.csv, atus_data2.csv, and GSS.json are in the same directory.');
+        });
+
+function updateViz1() {
+    const ageFilter = d3.select('#age-filter').property('value');
+    const sexFilter = d3.select('#sex-filter').property('value');
+
+    const ageText = ageFilter === 'all' ? 'All Ages' : 
+                   ageFilter === '18-34' ? '18-34 Years' :
+                   ageFilter === '35-54' ? '35-54 Years' : '55+ Years';
+    const sexText = sexFilter === 'all' ? 'All Genders' :
+                   sexFilter === '1' ? 'Male' : 'Female';
+    
+    d3.select('#filter-info').text(`Showing: ${ageText}, ${sexText}`);
+
+    let filteredAtus = atusData;
+
+    if (ageFilter !== 'all') {
+        if (ageFilter === '18-34') {
+            filteredAtus = filteredAtus.filter(d => d.AGE >= 18 && d.AGE <= 34);
+        } else if (ageFilter === '35-54') {
+            filteredAtus = filteredAtus.filter(d => d.AGE >= 35 && d.AGE <= 54);
+        } else if (ageFilter === '55+') {
+            filteredAtus = filteredAtus.filter(d => d.AGE >= 55);
+        }
+    }
+
+    if (sexFilter !== 'all') {
+        filteredAtus = filteredAtus.filter(d => d.SEX === +sexFilter);
+    }
+
+    let filteredHappiness = happinessData;
+
+    if (ageFilter !== 'all') {
+        if (ageFilter === '18-34') {
+            filteredHappiness = filteredHappiness.filter(d => d.age >= 18 && d.age <= 34);
+        } else if (ageFilter === '35-54') {
+            filteredHappiness = filteredHappiness.filter(d => d.age >= 35 && d.age <= 54);
+        } else if (ageFilter === '55+') {
+            filteredHappiness = filteredHappiness.filter(d => d.age >= 55);
+        }
+    }
+
+    if (sexFilter !== 'all') {
+        filteredHappiness = filteredHappiness.filter(d => d.sex === +sexFilter);
+    }
+    
+    const friendTimeData = calculateFriendTime(filteredAtus);
+    const happinessDataProcessed = calculateHappiness(filteredHappiness);
+    
+    d3.select('#chart1').selectAll('*').remove();
+    drawDualAxisChart(friendTimeData, happinessDataProcessed);
+}
+
+function calculateHappiness(data) {
+    const byYear = d3.rollup(
+        data,
+        v => {
+            const total = v.length;
+            const notTooHappy = v.filter(d => d.happy === "Not too happy").length;
+            console.log(`Year group: ${total} total, ${notTooHappy} not too happy`);
+            return (notTooHappy / total) * 100;
+        },
+        d => d.year
+    );
+
+    const result = Array.from(byYear, ([year, notTooHappyPct]) => ({
+        year: year,
+        notTooHappyPct: Math.round(notTooHappyPct * 10) / 10
+    })).sort((a, b) => a.year - b.year);
+
+    return result;
+}
+
+function calculateHappiness(data) {
+    const byYear = d3.rollup(
+        data,
+        v => {
+            const total = v.length;
+            const notTooHappy = v.filter(d => d.happy === "Not too happy").length;
+            return (notTooHappy / total) * 100;
+        },
+        d => d.year
+    );
+
+    return Array.from(byYear, ([year, notTooHappyPct]) => ({
+        year: year,
+        notTooHappyPct: Math.round(notTooHappyPct * 10) / 10
+    })).sort((a, b) => a.year - b.year);
+}
+
+function calculateFriendTime(data) {
+    const byYear = d3.rollup(
+        data,
+        v => d3.mean(v, d => d.all_friends),
+        d => d.YEAR
+    );
+
+    return Array.from(byYear, ([year, avgMinutes]) => ({
+        year: year,
+        minutes: Math.round(avgMinutes * 10) / 10
+    })).sort((a, b) => a.year - b.year);
+}
+
+function drawDualAxisChart(friendData, happData) {
+    const margin = {top: 50, right: 90, bottom: 70, left: 90};
+    const container = d3.select('#chart1');
+    const containerWidth = container.node().getBoundingClientRect().width;
+    const width = containerWidth - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
+
+    const svg = container
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleLinear()
+        .domain([2003, 2024])
+        .range([0, width]);
+
+    const yFriend = d3.scaleLinear()
+        .domain([0, d3.max(friendData, d => d.minutes) * 1.1])
+        .range([height, 0]);
+
+    const yHappinessExtent = d3.extent(happData, d => d.notTooHappyPct);
+    const yHappiness = d3.scaleLinear()
+        .domain([yHappinessExtent[0] * 0.9, yHappinessExtent[1] * 1.1])
+        .range([height, 0]);
+
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x).tickFormat(d3.format('d')).ticks(10))
+        .style('font-size', '12px')
+        .style('color', '#94a3b8');
+
+    const leftAxis = svg.append('g')
+        .call(d3.axisLeft(yFriend))
+        .style('font-size', '12px');
+    leftAxis.selectAll('text').style('fill', '#22d3ee');
+    leftAxis.selectAll('line').style('stroke', '#22d3ee').style('opacity', 0.3);
+    leftAxis.select('.domain').style('stroke', '#22d3ee');
+
+    const rightAxis = svg.append('g')
+        .attr('transform', `translate(${width},0)`)
+        .call(d3.axisRight(yHappiness).tickFormat(d => d.toFixed(0) + '%'))
+        .style('font-size', '12px');
+    rightAxis.selectAll('text').style('fill', '#f472b6');
+    rightAxis.selectAll('line').style('stroke', '#f472b6').style('opacity', 0.3);
+    rightAxis.select('.domain').style('stroke', '#f472b6');
+
+    svg.append('text')
+        .attr('class', 'axis-label')
+        .attr('text-anchor', 'middle')
+        .attr('x', width / 2)
+        .attr('y', height + 50)
+        .text('Year');
+
+    svg.append('text')
+        .attr('class', 'axis-label axis-friends')
+        .attr('text-anchor', 'middle')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -height / 2)
+        .attr('y', -70)
+        .style('font-weight', '600')
+        .text('Minutes per Day with Friends');
+
+    svg.append('text')
+        .attr('class', 'axis-label axis-happiness')
+        .attr('text-anchor', 'middle')
+        .attr('transform', 'rotate(90)')
+        .attr('x', height / 2)
+        .attr('y', -width - 70)
+        .style('font-weight', '600')
+        .text('% Not Too Happy');
+
+    const friendLine = d3.line()
+        .x(d => x(d.year))
+        .y(d => yFriend(d.minutes))
+        .curve(d3.curveMonotoneX);
+
+    const happinessLine = d3.line()
+        .x(d => x(d.year))
+        .y(d => yHappiness(d.notTooHappyPct))
+        .curve(d3.curveMonotoneX);
+
+    const friendPath = svg.append('path')
+        .datum(friendData)
+        .attr('class', 'line-friends')
+        .attr('d', friendLine);
+
+    const friendLength = friendPath.node().getTotalLength();
+
+    friendPath
+        .attr('stroke-dasharray', friendLength + ' ' + friendLength)
+        .attr('stroke-dashoffset', friendLength)
+        .transition()
+        .duration(1500)
+        .ease(d3.easeCubicInOut)
+        .attr('stroke-dashoffset', 0);
+
+    const happinessPath = svg.append('path')
+        .datum(happData)
+        .attr('class', 'line-happiness')
+        .attr('d', happinessLine);
+
+    const happinessLength = happinessPath.node().getTotalLength();
+
+    happinessPath
+        .attr('stroke-dasharray', happinessLength + ' ' + happinessLength)
+        .attr('stroke-dashoffset', happinessLength)
+        .transition()
+        .duration(1500)
+        .ease(d3.easeCubicInOut)
+        .attr('stroke-dashoffset', 0);
+
+    const tooltip = d3.select('.tooltip');
+
+    svg.selectAll('.dot-friends')
+        .data(friendData)
+        .enter()
+        .append('circle')
+        .attr('class', 'dot-friends')
+        .attr('cx', d => x(d.year))
+        .attr('cy', d => yFriend(d.minutes))
+        .attr('r', 0)
+        .transition()
+        .delay((d, i) => 1500 + i * 50)
+        .duration(300)
+        .attr('r', 5);
+
+    svg.selectAll('.dot-friends')
+        .on('mouseover', function(event, d) {
+            d3.select(this).transition().duration(200).attr('r', 7);
+            tooltip.style('opacity', 1)
+                .html(`<strong>${d.year}</strong><br/>Friends: ${d.minutes.toFixed(1)} min/day`)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 10) + 'px');
+        })
+        .on('mouseout', function() {
+            d3.select(this).transition().duration(200).attr('r', 5);
+            tooltip.style('opacity', 0);
+        });
+
+    svg.selectAll('.dot-happiness')
+        .data(happData)
+        .enter()
+        .append('circle')
+        .attr('class', 'dot-happiness')
+        .attr('cx', d => x(d.year))
+        .attr('cy', d => yHappiness(d.notTooHappyPct))
+        .attr('r', 0)
+        .transition()
+        .delay((d, i) => 1500 + i * 50)
+        .duration(300)
+        .attr('r', 5);
+
+    svg.selectAll('.dot-happiness')
+        .on('mouseover', function(event, d) {
+            d3.select(this).transition().duration(200).attr('r', 7);
+            tooltip.style('opacity', 1)
+                .html(`<strong>${d.year}</strong><br/>Not too happy: ${d.notTooHappyPct.toFixed(1)}%`)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 10) + 'px');
+        })
+        .on('mouseout', function() {
+            d3.select(this).transition().duration(200).attr('r', 5);
+            tooltip.style('opacity', 0);
+        });
+}
+
+function drawNonsocializingCorrelation(data) {
+    const validData = data.filter(d => 
+        d.nonsocializing >= 0 && 
+        d.nonsocializing <= 800 &&
+        d.friends >= 0 && 
+        d.family2 >= 0 &&
+        (d.friends + d.family2) >= 30 &&
+        (d.friends + d.family2) <= 600 
+    ).map(d => ({
+        nonsocializing: d.nonsocializing,
+        socialTime: d.friends + d.family2,
+        year: d.YEAR
+    }));
+
+    const n = validData.length;
+    const sumX = d3.sum(validData, d => d.nonsocializing);
+    const sumY = d3.sum(validData, d => d.socialTime);
+    const sumXY = d3.sum(validData, d => d.nonsocializing * d.socialTime);
+    const sumX2 = d3.sum(validData, d => d.nonsocializing * d.nonsocializing);
+    const sumY2 = d3.sum(validData, d => d.socialTime * d.socialTime);
+
+    const correlation = (n * sumXY - sumX * sumY) / 
+        Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    const binSize = 50;
+    const binnedData = d3.rollup(
+        validData,
+        v => ({
+            count: v.length,
+            avgSocial: d3.mean(v, d => d.socialTime),
+            avgNonSocial: d3.mean(v, d => d.nonsocializing)
+        }),
+        d => Math.floor(d.nonsocializing / binSize) * binSize
+    );
+
+    const binArray = Array.from(binnedData, ([nonsocial, stats]) => ({
+        nonsocializing: nonsocial + binSize/2,
+        socialTime: stats.avgSocial,
+        count: stats.count
+    })).filter(d => d.count > 100);
+
+    const lowScreen = binArray.filter(d => d.nonsocializing < 250);
+    const mediumScreen = binArray.filter(d => d.nonsocializing >= 250 && d.nonsocializing < 450);
+    const highScreen = binArray.filter(d => d.nonsocializing >= 450);
+
+    const avgSocialByGroup = {
+        low: lowScreen.reduce((sum, d) => sum + d.socialTime * d.count, 0) / 
+             lowScreen.reduce((sum, d) => sum + d.count, 0),
+        medium: mediumScreen.reduce((sum, d) => sum + d.socialTime * d.count, 0) / 
+                mediumScreen.reduce((sum, d) => sum + d.count, 0),
+        high: highScreen.reduce((sum, d) => sum + d.socialTime * d.count, 0) / 
+              highScreen.reduce((sum, d) => sum + d.count, 0)
+    };
+
+    const margin = {top: 100, right: 50, bottom: 80, left: 90};
+    const container = d3.select('#chart2');
+    const containerWidth = container.node().getBoundingClientRect().width;
+    const width = containerWidth - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
+
+    const svg = container
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', -70)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#f1f5f9')
+        .attr('font-size', '20px')
+        .attr('font-weight', '700')
+        .text('Screen Time vs Social Connection');
+
+    svg.append('text')
+        .attr('x', width / 2)
+        .attr('y', -45)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#94a3b8')
+        .attr('font-size', '14px')
+        .attr('font-style', 'italic')
+        .text('Click on screen usage groups to compare their social lives');
+
+    const buttonContainer = d3.select('#chart2')
+        .insert('div', 'svg')
+        .style('display', 'flex')
+        .style('justify-content', 'center')
+        .style('gap', '15px')
+        .style('margin-bottom', '20px');
+
+    let selectedGroup = 'all';
+
+    const groups = [
+        { key: 'all', label: 'All Americans', color: '#a78bfa', data: binArray },
+        { key: 'low', label: 'Light Screen Users (<4 hrs)', color: '#10b981', data: lowScreen },
+        { key: 'medium', label: 'Moderate (4-7.5 hrs)', color: '#f59e0b', data: mediumScreen },
+        { key: 'high', label: 'Heavy (7.5+ hrs)', color: '#ef4444', data: highScreen }
+    ];
+
+    const buttons = buttonContainer.selectAll('.filter-btn')
+        .data(groups)
+        .enter()
+        .append('button')
+        .style('padding', '12px 20px')
+        .style('border', d => `2px solid ${d.color}`)
+        .style('border-radius', '8px')
+        .style('background', d => d.key === 'all' ? d.color : '#1e293b')
+        .style('color', d => d.key === 'all' ? 'white' : '#cbd5e1')
+        .style('cursor', 'pointer')
+        .style('font-size', '13px')
+        .style('font-weight', '600')
+        .style('transition', 'all 0.2s')
+        .html(d => {
+            const total = d.data.reduce((sum, b) => sum + b.count, 0);
+            return `${d.label}<br/><span style="font-size: 11px; opacity: 0.8;">${total.toLocaleString()} people</span>`;
+        })
+        .on('mouseover', function(event, d) {
+            if (selectedGroup !== d.key) {
+                d3.select(this).style('background', '#334155');
+            }
+        })
+        .on('mouseout', function(event, d) {
+            if (selectedGroup !== d.key) {
+                d3.select(this).style('background', '#1e293b');
+            }
+        })
+        .on('click', function(event, d) {
+            selectedGroup = d.key;
+            
+            buttons.each(function(btnData) {
+                d3.select(this)
+                    .style('background', btnData.key === d.key ? btnData.color : '#1e293b')
+                    .style('color', btnData.key === d.key ? 'white' : '#cbd5e1');
+            });
+
+            updateVisualization(d);
+        });
+
+    const x = d3.scaleLinear()
+        .domain([0, 800])
+        .range([0, width]);
+
+    const y = d3.scaleLinear()
+        .domain([0, 600])
+        .range([height, 0]);
+
+    const sizeScale = d3.scaleSqrt()
+        .domain([0, d3.max(binArray, d => d.count)])
+        .range([8, 35]);
+
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(8))
+        .style('font-size', '12px')
+        .style('color', '#94a3b8');
+
+    svg.append('g')
+        .call(d3.axisLeft(y).ticks(8))
+        .style('font-size', '12px')
+        .style('color', '#94a3b8');
+
+    svg.append('text')
+        .attr('class', 'axis-label')
+        .attr('text-anchor', 'middle')
+        .attr('x', width / 2)
+        .attr('y', height + 60)
+        .style('font-size', '14px')
+        .style('font-weight', '600')
+        .text('Screen/Work Time (minutes per day)');
+
+    svg.append('text')
+        .attr('class', 'axis-label')
+        .attr('text-anchor', 'middle')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -height / 2)
+        .attr('y', -70)
+        .style('font-size', '14px')
+        .style('font-weight', '600')
+        .text('Social Time: Friends + Family (minutes per day)');
+
+    const xMin = 0;
+    const xMax = 800;
+    const trendData = [
+        {x: xMin, y: Math.max(0, slope * xMin + intercept)},
+        {x: xMax, y: Math.max(0, slope * xMax + intercept)}
+    ];
+
+    const trendLine = d3.line()
+        .x(d => x(d.x))
+        .y(d => y(d.y));
+
+    const trendPath = svg.append('path')
+        .datum(trendData)
+        .attr('fill', 'none')
+        .attr('stroke', '#64748b')
+        .attr('stroke-width', 3)
+        .attr('stroke-dasharray', '8,4')
+        .attr('d', trendLine)
+        .attr('opacity', 0.3);
+
+    const comparisonPanel = svg.append('g')
+        .attr('class', 'comparison-panel')
+        .attr('transform', `translate(${width - 220}, 20)`);
+
+    const tooltip = d3.select('.tooltip');
+
+    function updateVisualization(group) {
+        svg.selectAll('.bubble').remove();
+        svg.selectAll('.group-highlight').remove();
+
+        trendPath
+            .transition()
+            .duration(400)
+            .attr('opacity', group.key === 'all' ? 0.3 : 0.6)
+            .attr('stroke', group.key === 'all' ? '#64748b' : group.color)
+            .attr('stroke-width', group.key === 'all' ? 3 : 4);
+
+        const displayData = group.key === 'all' ? binArray : group.data;
+
+        const bubbles = svg.selectAll('.bubble')
+            .data(displayData)
+            .enter()
+            .append('circle')
+            .attr('class', 'bubble')
+            .attr('cx', d => x(d.nonsocializing))
+            .attr('cy', d => y(d.socialTime))
+            .attr('r', 0)
+            .attr('fill', group.color)
+            .attr('opacity', group.key === 'all' ? 0.4 : 0.7)
+            .attr('stroke', group.color)
+            .attr('stroke-width', 2)
+            .style('cursor', 'pointer')
+            .on('mouseover', function(event, d) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr('opacity', 1)
+                    .attr('r', sizeScale(d.count) * 1.3)
+                    .attr('stroke-width', 3);
+
+        const hoursScreen = (d.nonsocializing / 60).toFixed(1);
+        const hoursSocial = (d.socialTime / 60).toFixed(1);
+                
+        tooltip.style('opacity', 1)
+            .html(`
+                <div style="border-bottom: 1px solid #475569; padding-bottom: 8px; margin-bottom: 8px;">
+                    <strong>${d.count.toLocaleString()} people</strong>
+                </div>
+                <div style="margin-bottom: 6px;">
+                    <span style="color: #22d3ee;">Screen/Work: ${hoursScreen} hrs/day</span>
+                </div>
+                <div>
+                    <span style="color: #f472b6;">Social time: ${hoursSocial} hrs/day</span>
+                </div>
+            `)
+            .style('left', (event.pageX + 15) + 'px')
+            .style('top', (event.pageY - 10) + 'px');
+        })
+        .on('mouseout', function(event, d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr('opacity', group.key === 'all' ? 0.4 : 0.7)
+                .attr('r', sizeScale(d.count))
+                .attr('stroke-width', 2);
+            
+            tooltip.style('opacity', 0);
+        });
+
+        bubbles
+        .transition()
+        .duration(500)
+        .delay((d, i) => i * 30)
+        .attr('r', d => sizeScale(d.count));
+
+        comparisonPanel.selectAll('*').remove();
+
+        const panelBg = comparisonPanel.append('rect')
+            .attr('width', 210)
+            .attr('height', 140)
+            .attr('fill', '#1e293b')
+            .attr('stroke', group.color)
+            .attr('stroke-width', 2)
+            .attr('rx', 8)
+            .attr('opacity', 0);
+
+        panelBg.transition().duration(400).attr('opacity', 0.95);
+
+        const labelText = group.label.replace(/📱+\s*/, '').split('(')[0].trim();
+        
+        comparisonPanel.append('text')
+            .attr('x', 105)
+            .attr('y', 25)
+            .attr('text-anchor', 'middle')
+            .attr('fill', group.color)
+            .attr('font-size', '14px')
+            .attr('font-weight', '700')
+            .attr('opacity', 0)
+            .text(labelText)
+            .transition()
+            .delay(200)
+            .duration(400)
+            .attr('opacity', 1);
+
+        const totalPeople = displayData.reduce((sum, d) => sum + d.count, 0);
+        
+        const avgSocialHours = displayData.reduce((sum, d) => sum + (d.socialTime / 60) * d.count, 0) / totalPeople;
+        const avgScreenHours = displayData.reduce((sum, d) => sum + (d.nonsocializing / 60) * d.count, 0) / totalPeople;
+
+        comparisonPanel.append('text')
+            .attr('x', 105)
+            .attr('y', 55)
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#cbd5e1')
+            .attr('font-size', '12px')
+            .attr('opacity', 0)
+            .text(`${totalPeople.toLocaleString()} Americans`)
+            .transition()
+            .delay(300)
+            .duration(400)
+            .attr('opacity', 0.8);
+
+        comparisonPanel.append('text')
+            .attr('x', 105)
+            .attr('y', 80)
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#22d3ee')
+            .attr('font-size', '13px')
+            .attr('font-weight', '600')
+            .attr('opacity', 0)
+            .text(`Avg screen: ${avgScreenHours.toFixed(1)} hrs/day`)
+            .transition()
+            .delay(400)
+            .duration(400)
+            .attr('opacity', 1);
+
+        comparisonPanel.append('text')
+            .attr('x', 105)
+            .attr('y', 105)
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#f472b6')
+            .attr('font-size', '13px')
+            .attr('font-weight', '600')
+            .attr('opacity', 0)
+            .text(`Avg social: ${avgSocialHours.toFixed(1)} hrs/day`)
+            .transition()
+            .delay(500)
+            .duration(400)
+            .attr('opacity', 1);
+
+        if (group.key !== 'all') {
+            const allTotalPeople = binArray.reduce((sum, d) => sum + d.count, 0);
+            const allAvgSocialHours = binArray.reduce((sum, d) => sum + (d.socialTime / 60) * d.count, 0) / allTotalPeople;
+            const diffHours = (avgSocialHours - allAvgSocialHours).toFixed(1);
+
+            comparisonPanel.append('text')
+                .attr('x', 105)
+                .attr('y', 128)
+                .attr('text-anchor', 'middle')
+                .attr('fill', diffHours > 0 ? '#10b981' : '#ef4444')
+                .attr('font-size', '12px')
+                .attr('font-weight', '600')
+                .attr('font-style', 'italic')
+                .attr('opacity', 0)
+                .text(`${diffHours > 0 ? '+' : ''}${diffHours} hrs vs average`)
+                .transition()
+                .delay(600)
+                .duration(400)
+                .attr('opacity', 1);
+        }
+    }
+
+    updateVisualization(groups[0]);
+}
+
+function drawInteractiveStackedArea() {
+    const yearlyData = d3.rollup(
+        atusData2,
+        v => ({
+            friends: d3.mean(v, d => d.friends),
+            family: d3.mean(v, d => d.family2),
+            alone: d3.mean(v, d => d.alone2),
+            nonsocializing: d3.mean(v, d => d.nonsocializing)
+        }),
+        d => d.YEAR
+    );
+
+    const timeData = Array.from(yearlyData, ([year, values]) => ({
+        year: year,
+        friends: values.friends,
+        family: values.family,
+        alone: values.alone,
+        nonsocializing: values.nonsocializing
+    })).sort((a, b) => a.year - b.year);
+
+    const margin = {top: 50, right: 50, bottom: 70, left: 90};
+    const container = d3.select('#chart3');
+    const containerWidth = container.node().getBoundingClientRect().width;
+    const width = containerWidth - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
+
+    const svg = container
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleLinear()
+        .domain(d3.extent(timeData, d => d.year))
+        .range([0, width]);
+
+    const y = d3.scaleLinear()
+        .domain([0, 800])
+        .range([height, 0]);
+
+    const stack = d3.stack()
+        .keys(['friends', 'family', 'alone', 'nonsocializing'])
+        .order(d3.stackOrderNone)
+        .offset(d3.stackOffsetNone);
+
+    const series = stack(timeData);
+
+    const area = d3.area()
+        .x(d => x(d.data.year))
+        .y0(d => y(d[0]))
+        .y1(d => y(d[1]))
+        .curve(d3.curveMonotoneX);
+
+    const areas = svg.selectAll('.area')
+        .data(series)
+        .enter()
+        .append('path')
+        .attr('class', d => `area area-${d.key}`)
+        .attr('d', area);
+
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x).tickFormat(d3.format('d')))
+        .style('font-size', '12px')
+        .style('color', '#94a3b8');
+
+    svg.append('g')
+        .call(d3.axisLeft(y))
+        .style('font-size', '12px')
+        .style('color', '#94a3b8');
+
+    svg.append('text')
+        .attr('class', 'axis-label')
+        .attr('text-anchor', 'middle')
+        .attr('x', width / 2)
+        .attr('y', height + 50)
+        .text('Year');
+
+    svg.append('text')
+        .attr('class', 'axis-label')
+        .attr('text-anchor', 'middle')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -height / 2)
+        .attr('y', -70)
+        .text('Minutes per Day');
+
+    let selectedCategory = 'all';
+
+    d3.selectAll('.category-button').on('click', function() {
+        const category = d3.select(this).attr('data-category');
+        selectedCategory = category;
+
+        d3.selectAll('.category-button').classed('active', false);
+        d3.select(this).classed('active', true);
+
+        if (category === 'all') {
+            areas.classed('dimmed', false).classed('highlighted', false);
+            updateComparison('all', timeData);
+        } else {
+            areas.each(function(d) {
+                const element = d3.select(this);
+                if (d.key === category) {
+                    element.classed('dimmed', false).classed('highlighted', true);
+                } else {
+                    element.classed('dimmed', true).classed('highlighted', false);
+                }
+            });
+            updateComparison(category, timeData);
+        }
+    });
+
+    updateComparison('all', timeData);
+
+    function updateComparison(category, data) {
+        const comparisonPanel = d3.select('#comparison-panel');
+
+        if (category === 'all') {
+            comparisonPanel.style('display', 'none');
+            return;
+        }
+        
+        comparisonPanel.style('display', 'grid');
+        
+        const data2003 = data.find(d => d.year === 2003);
+        const data2024 = data[data.length - 1];
+
+        const value2003 = data2003[category];
+        const value2024 = data2024[category];
+
+        const change = value2024 - value2003;
+        const changePercent = ((change / value2003) * 100).toFixed(1);
+
+        d3.select('#value-2003')
+            .style('color', '#22d3ee')
+            .text(Math.round(value2003));
+
+        d3.select('#value-2024')
+            .style('color', change < 0 ? '#ef4444' : '#10b981')
+            .text(`${Math.round(value2024)} (${change > 0 ? '+' : ''}${changePercent}%)`);
+    }
+}
+</script></body>
+</html>
