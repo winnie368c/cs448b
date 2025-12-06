@@ -950,7 +950,7 @@ function drawNonsocializingCorrelation(data) {
               highScreen.reduce((sum, d) => sum + d.count, 0)
     };
 
-    const margin = {top: 100, right: 50, bottom: 200, left: 90};
+    const margin = {top: 100, right: 50, bottom: 105, left: 90};
     const container = d3.select('#chart2');
     const containerWidth = container.node().getBoundingClientRect().width;
     const width = containerWidth - margin.left - margin.right;
