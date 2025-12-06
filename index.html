@@ -103,7 +103,7 @@
 
         .chart-container {
             width: 100%;
-            height: 550px;
+            height: 500px;
             background: #1e293b;
             border-radius: 8px;
         }
@@ -950,7 +950,7 @@ function drawNonsocializingCorrelation(data) {
               highScreen.reduce((sum, d) => sum + d.count, 0)
     };
 
-    const margin = {top: 100, right: 50, bottom: 150, left: 90};
+    const margin = {top: 100, right: 50, bottom: 80, left: 90};
     const container = d3.select('#chart2');
     const containerWidth = container.node().getBoundingClientRect().width;
     const width = containerWidth - margin.left - margin.right;
